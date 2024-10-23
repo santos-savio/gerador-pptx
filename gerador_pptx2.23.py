@@ -16,6 +16,7 @@ font_name = "BANDEX" # Fonte
 cor = [255, 255, 255] # Cor em RGB
 path_img = "" # Inicializa a variável vazia do caminho da imagem
 slide = "" # Inicializa a variável vazia do nome do txt atual
+nMaximo = 40 # Define o tamanho máximo de letras adequadas para o tamanho do slide
 
 
 def selecionar_arquivo():
@@ -90,48 +91,46 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
 
     titulo = True
     # Para cada linha do arquivo .txt, cria um slide e adiciona o texto
-    indice = 0
     for indice, linha in enumerate(linhas):
-        linha = linha.rstrip()  # Remove espaços e quebras de linha adicionais
+        linha = linha.rstrip()  # Remove espaços adicionais
         # desativado pra perfomance: print(linha)
+        if len(linha) > nMaximo:
+            linhas_grandes.append(indice + 1)
 
-        if linha:  # Só adiciona se a linha não for vazia
-            slide = prs.slides.add_slide(prs.slide_layouts[5])  # Cria um slide branco e sem título
+        slide = prs.slides.add_slide(prs.slide_layouts[5])  # Cria um slide branco e sem título
 
-            largura_polegadas = prs.slide_width
-            altura_polegadas = prs.slide_height
+        largura_polegadas = prs.slide_width
+        altura_polegadas = prs.slide_height
 
-            # Verifica se o slide tem um título
-            if slide.shapes.title:
-                # Verifica se o título está vazio
-                if not slide.shapes.title.text.strip():
-                    # Remove a caixa de título se estiver vazia
-                    slide.shapes._spTree.remove(slide.shapes.title._element)
+        # Verifica se o slide tem um título
+        if slide.shapes.title:
+            # Verifica se o título está vazio
+            if not slide.shapes.title.text.strip():
+                # Remove a caixa de título se estiver vazia
+                slide.shapes._spTree.remove(slide.shapes.title._element)
 
-            # Adiciona a imagem ajustada ao tamanho do slide
-            if path_img:
-                slide.shapes.add_picture(path_img, 0, 0, largura_polegadas, altura_polegadas)
-        
-                
+        # Adiciona a imagem ajustada ao tamanho do slide
+        if path_img:
+            slide.shapes.add_picture(path_img, 0, 0, largura_polegadas, altura_polegadas)
+    
+            
 
-            textbox = slide.shapes.add_textbox(Inches(pos_x), Inches(pos_y), Inches(largura_textbox), Inches(altura_textbox)) # Adiciona o textbox
-            text_frame = textbox.text_frame                 # Acessa o textbox
-            text_frame.text = linha                         # Insere o conteúdo da string linha no textbox
-            text_frame.auto_size = True                     # Ajusta automaticamente o tamanho da caixa
-            text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE  # Centraliza verticalmente
+        textbox = slide.shapes.add_textbox(Inches(pos_x), Inches(pos_y), Inches(largura_textbox), Inches(altura_textbox)) # Adiciona o textbox
+        text_frame = textbox.text_frame                 # Acessa o textbox
+        text_frame.text = linha                         # Insere o conteúdo da string linha no textbox
+        text_frame.auto_size = True                     # Ajusta automaticamente o tamanho da caixa
+        text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE  # Centraliza verticalmente
 
-            p = text_frame.paragraphs[0]         # Acessa o primeiro (e único) parágrafo
-            p.font.size = Pt(font_size)          # Define o tamanho da fonte
-            p.font.name = font_name              # Define a fonte
-            p.font.color.rgb = RGBColor(r, g, b) # Define a cor
-            p.alignment = PP_ALIGN.CENTER
+        p = text_frame.paragraphs[0]         # Acessa o primeiro (e único) parágrafo
+        p.font.size = Pt(font_size)          # Define o tamanho da fonte
+        p.font.name = font_name              # Define a fonte
+        p.font.color.rgb = RGBColor(r, g, b) # Define a cor
+        p.alignment = PP_ALIGN.CENTER
 
 
-            if titulo:
-                p.font.size = Pt(font_size * 1.6)  # Define o tamanho da fonte
-                titulo = False
-            if len(linha)>39:
-                linhas_grandes.append(indice-1)
+        if titulo:
+            p.font.size = Pt(font_size * 1.6)  # Define o tamanho da fonte
+            titulo = False
 
     if linhas_grandes:
         # linhas_excedentes = [linhas[i] for i in linhas_grandes] # Captura as linhas longas
@@ -147,10 +146,10 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
         print(f'Apresentação {arquivo_ppt} criada com sucesso!')
     except:
         print(f"Erro ao salvar o arquivo {arquivo_ppt}, verifique se há uma janela aberta no PowerPoint")
-    time.sleep(1.5)
+    #time.sleep(1.5)
+    input("Aperte enter para fechar")
 
 def main():
-
     r, g, b = cor
     # Seleciona os arquivos .txt
     arquivos_txt = selecionar_arquivo()
