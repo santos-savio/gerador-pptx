@@ -1,3 +1,5 @@
+#Código 100% funcional
+
 import tkinter as tk
 from tkinter import filedialog
 from pptx import Presentation
@@ -55,24 +57,26 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
     path_img = add_imagem()
     print("path_img: ", path_img)
 
+
+    titulo = True
     # Para cada linha do arquivo .txt, cria um slide e adiciona o texto
-    for linha in linhas:
+    for indice, linha in enumerate(linhas):
         linha = linha.strip()  # Remove espaços e quebras de linha adicionais
-        print(linha)
+        # desativado pra perfomance: print(linha)
+
         if linha:  # Só adiciona se a linha não for vazia
             slide = prs.slides.add_slide(prs.slide_layouts[5])  # Cria um slide branco e sem título
 
             largura_polegadas = prs.slide_width
             altura_polegadas = prs.slide_height
 
-                        # Verifica se o slide tem um título
+            # Verifica se o slide tem um título
             if slide.shapes.title:
                 # Verifica se o título está vazio
                 if not slide.shapes.title.text.strip():
                     # Remove a caixa de título se estiver vazia
                     slide.shapes._spTree.remove(slide.shapes.title._element)
-            # left = top = 0
-            # slide.shapes.add_picture(path_img, left-0.1*prs.slide_width, top, height = prs.slide_height)
+
             # Adiciona a imagem ajustada ao tamanho do slide
             slide.shapes.add_picture(path_img, 0, 0, largura_polegadas, altura_polegadas)
 
@@ -89,8 +93,14 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
             p.alignment = PP_ALIGN.CENTER
 
 
-
-
+            if titulo:
+                print("Adicionando titulo")
+                p.font.size = Pt(font_size * 1.6)  # Define o tamanho da fonte
+                titulo = False
+            elif not titulo and len(linha)<40:
+                print(f"Linha: {indice}")
+            elif not titulo and len(linha)>39:
+                print(f"Linha grande demais:  {indice} ")
 
     # Salva a apresentação PowerPoint
     try:
@@ -98,6 +108,7 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
         print(f'Apresentação {arquivo_ppt} criada com sucesso!')
     except:
         print("Erro ao salvar o arquivo, verifique se há uma janela aberta no PowerPoint")
+    input("Aperte enter pra sair")
 
 def add_imagem():
     janela_add_img = tk.Toplevel()
