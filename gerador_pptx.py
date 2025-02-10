@@ -1,4 +1,3 @@
-import time
 import tkinter as tk
 from tkinter import filedialog
 from pptx import Presentation
@@ -37,25 +36,28 @@ def calcular_largura(altura):
     return (16 / 9) * altura
 
 def add_imagem(slide):
-    janela_add_img = tk.Toplevel()
-    janela_add_img.withdraw()  # Esconde a janela principal do tkinter
-    arquivo_img = filedialog.askopenfilenames(
-        title = f"Selecione o arquivo .jpg ou png para fundo do slide: {slide}",
-        filetypes=[
-            ("Arquivo de Imagem", "*.jpg"),
-            ("Arquivo de Imagem", "*.png")]
-    )
-    
-    if not arquivo_img:
-        print("Nenhuma imagem foi selecionada \n")
-        pergunta_img = input("Digite Y para selecionar uma imagem, ou N para montar os slides sem imagem \n")
+    while True:
+        janela_add_img = tk.Toplevel()
+        janela_add_img.withdraw()  # Esconde a janela principal do tkinter
+        arquivo_img = filedialog.askopenfilenames(
+            title = f"Selecione o arquivo .jpg ou png para fundo do slide: {slide}",
+            filetypes=[
+                ("Arquivo de Imagem", "*.jpg"),
+                ("Arquivo de Imagem", "*.png")]
+        )
+        
+        if not arquivo_img:
+            print("Nenhuma imagem foi selecionada \n")
+            pergunta_img = input("Digite Y para selecionar uma imagem, ou N para montar os slides sem imagem \n")
 
-        if pergunta_img.lower() == "y":
-            return add_imagem(slide)
-        return None  # Caso nenhum arquivo seja selecionado
-    else:
-        return arquivo_img[0]  # Retorna apenas o primeiro arquivo selecionado
-
+            if pergunta_img.lower() == "y":
+                continue
+            else: # Caso aperte algo que não seja "Y"
+                print("Nenhuma imagem será adicionada")
+                return None  # Sai do loop e retorna none, caso nenhum arquivo seja selecionado
+       
+        else: # Caso tenha alguma imagem
+            return arquivo_img[0]  # Retorna apenas o primeiro arquivo selecionado
 
 def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, font_size, font_name, r, g, b):
     """Cria uma apresentação PowerPoint a partir de um arquivo .txt."""
@@ -81,13 +83,6 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
     
     path_img = add_imagem(slide)
     
-    if not path_img:
-        print("Nenhuma imagem foi selecionada \n")
-        pergunta = input("Aperte Y para selecionar uma imagem, ou N para continuar \n")
-        if pergunta.lower() == "y":
-            path_img = add_imagem(slide)
-        else:
-            print("Nenhuma imagem será adicionada")
 
     titulo = True
     # Para cada linha do arquivo .txt, cria um slide e adiciona o texto
@@ -112,7 +107,6 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
         # Adiciona a imagem ajustada ao tamanho do slide
         if path_img:
             slide.shapes.add_picture(path_img, 0, 0, largura_polegadas, altura_polegadas)
-    
             
 
         textbox = slide.shapes.add_textbox(Inches(pos_x), Inches(pos_y), Inches(largura_textbox), Inches(altura_textbox)) # Adiciona o textbox
@@ -135,21 +129,18 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
     if linhas_grandes:
         # linhas_excedentes = [linhas[i] for i in linhas_grandes] # Captura as linhas longas
         print(f"{arquivo_ppt} possui as seguintes linhas grandes: {linhas_grandes}")
-
-            # indice += 1
-    # if len(linhas_grandes) > 0:
-    #     print(f"{arquivo_ppt} possui as seguintes linhas grandes demais:  {linhas_grandes[indice]} ")
     
     # Salva a apresentação PowerPoint
-    try:
+    try: # Tenta salvar
         prs.save(arquivo_ppt)
         print(f'Apresentação {arquivo_ppt} criada com sucesso!')
     except:
         print(f"Erro ao salvar o arquivo {arquivo_ppt}, verifique se há uma janela aberta no PowerPoint")
-    #time.sleep(1.5)
-    input("Aperte enter para fechar")
+    
+    input("Aperte enter para fechar") # Adicionado para o console não encerrar imediatamente
 
 def main():
+
     r, g, b = cor
     # Seleciona os arquivos .txt
     arquivos_txt = selecionar_arquivo()
