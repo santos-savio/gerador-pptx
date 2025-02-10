@@ -1,3 +1,4 @@
+#v 2.24
 import tkinter as tk
 from tkinter import filedialog
 from pptx import Presentation
