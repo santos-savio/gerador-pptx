@@ -1,5 +1,6 @@
 #Código 100% funcional
 
+import time
 import tkinter as tk
 from tkinter import filedialog
 from pptx import Presentation
@@ -15,6 +16,7 @@ altura_textbox = 2    # Altura textbox
 font_size = 48  # Tamanho da fonte
 font_name = "BANDEX" # Fonte
 cor = [255, 255, 255]
+path_img = ""
 
 
 def selecionar_arquivo():
@@ -34,6 +36,29 @@ def calcular_largura(altura):
     """Calcula a largura com base na altura para manter a proporção 16:9."""
     return (16 / 9) * altura
     
+def add_imagem():
+     # janela_add_img = tk.Toplevel()
+     # janela_add_img.withdraw()  # Esconde a janela principal do tkinter
+    tk.withdraw()  # Esconde a janela principal do tkinter
+    arquivo_img = filedialog.askopenfilenames(
+        title="Selecione o arquivo .jpg ou png para fundo do slide",
+        filetypes=[
+            ("Arquivo de Imagem", "*.jpg"),
+            ("Arquivo de Imagem", "*.png")]
+    )
+    
+    if arquivo_img != None:
+        return arquivo_img[0]  # Retorna apenas o primeiro arquivo selecionado
+    else:
+        print("Nenhuma imagem foi selecionada \n")
+        pergunta_img = input("Digite Y para selecionar uma imagem, ou N para montar os slides sem imagem \n")
+
+        if pergunta_img.lower() == "y":
+            return add_imagem()
+        return None  # Caso nenhum arquivo seja selecionado
+    
+
+
 
 def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, font_size, font_name, r, g, b):
     """Cria uma apresentação PowerPoint a partir de um arquivo .txt."""
@@ -48,15 +73,18 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
     prs.slide_height = Inches(altura_slide)
 
     
-    print("A largura e altura da apresentação é: ", prs.slide_width / 914400, prs.slide_height)
+    # print("A largura e altura da apresentação é: ", prs.slide_width / 914400, prs.slide_height)
 
     # Abre o arquivo .txt e lê as linhas
     with open(txt_file, 'r', encoding='utf-8') as file:
         linhas = file.readlines()
-
+    
     path_img = add_imagem()
-    print("path_img: ", path_img)
-
+    
+    if path_img:
+        print("path_img: ", path_img)
+    else:
+        print("Nenhuma imagem será adicionada")
 
     titulo = True
     # Para cada linha do arquivo .txt, cria um slide e adiciona o texto
@@ -78,7 +106,10 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
                     slide.shapes._spTree.remove(slide.shapes.title._element)
 
             # Adiciona a imagem ajustada ao tamanho do slide
-            slide.shapes.add_picture(path_img, 0, 0, largura_polegadas, altura_polegadas)
+            if path_img:
+                slide.shapes.add_picture(path_img, 0, 0, largura_polegadas, altura_polegadas)
+        
+                
 
             textbox = slide.shapes.add_textbox(Inches(pos_x), Inches(pos_y), Inches(largura_textbox), Inches(altura_textbox)) # Adiciona o textbox
             text_frame = textbox.text_frame                 # Acessa o textbox
@@ -97,8 +128,8 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
                 print("Adicionando titulo")
                 p.font.size = Pt(font_size * 1.6)  # Define o tamanho da fonte
                 titulo = False
-            elif not titulo and len(linha)<40:
-                print(f"Linha: {indice}")
+            #elif not titulo and len(linha)<40:
+                #print(f"Linha: {indice}")
             elif not titulo and len(linha)>39:
                 print(f"Linha grande demais:  {indice} ")
 
@@ -108,7 +139,7 @@ def criar_apresentacao(txt_file, pos_x, pos_y, largura_textbox, altura_textbox, 
         print(f'Apresentação {arquivo_ppt} criada com sucesso!')
     except:
         print("Erro ao salvar o arquivo, verifique se há uma janela aberta no PowerPoint")
-    input("Aperte enter pra sair")
+    time.sleep(1.5)
 
 def add_imagem():
     janela_add_img = tk.Toplevel()
