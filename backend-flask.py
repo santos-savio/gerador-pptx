@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file
+from flask import Flask, jsonify, request, send_file
 from werkzeug.utils import secure_filename
 import os
 
@@ -25,6 +25,16 @@ def upload_files():
     criar_apresentacao(txt_filename, image_filename)
 
     return send_file('/path/to/save/generated_presentation.pptx', as_attachment=True)
+
+@app.route('/criar_apresentacao', methods=['POST'])
+def criar_apresentacao():
+    data = request.get_json()
+    # Process the data and create a presentation
+    # For example, you can save the data to a file
+    filename = secure_filename(data['filename'])
+    with open(filename, 'w') as f:
+        f.write(data['content'])
+    return jsonify({"message": "Presentation created successfully"}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)
