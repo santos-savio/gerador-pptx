@@ -38,7 +38,7 @@ Next slide
     ' Definir frações para posicionamento
     FractionVertical = 50 ' Ajuste conforme necessário
     FractionHorizontal = 40 ' Ajuste conforme necessário
-    maiuculo = True ' Definir se o texto deve ser convertido para maiúsculas
+    maiuculo = True ' Definir se o texto deve ser convertido para maiúsculas (Usar True ou False)
 
 ' Loop para verificar cada slide na apresentaÃ§Ã£o
 For Each slideAtual In ActivePresentation.Slides
