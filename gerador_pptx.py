@@ -68,7 +68,7 @@ def criar_apresentacao():
     global path_img
 
     # Coleta as configurações da interface
-    altura_slide = float(altura_slide_entry.get())
+    altura_slide = float(7.5)  # Altura padrão
     pos_x = float(pos_x_entry.get())
     pos_y = float(pos_y_entry.get())
     # largura_textbox = float(largura_textbox_entry.get())
@@ -136,6 +136,8 @@ def criar_apresentacao():
             comentario = f"Linhas grandes (>{n_maximo} caracteres): {', '.join(map(str, linhas_grandes))}"
             slide.notes_slide.notes_text_frame.text = comentario
 
+    print(f"Largura do slide: {prs.slide_width / 914400}, Altura do slide: {prs.slide_height / 914400}")
+
     # Salva a apresentação
     prs.save(arquivo_ppt)
     messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
@@ -166,10 +168,6 @@ aba_formato = ttk.Frame(notebook)
 notebook.add(aba_formato, text="Formato")
 
 # Controles de configuração na aba "Formato"
-tk.Label(aba_formato, text="Altura do Slide (polegadas):").grid(row=0, column=0, sticky="w")
-altura_slide_entry = tk.Entry(aba_formato)
-altura_slide_entry.grid(row=1, column=0, pady=2)
-altura_slide_entry.insert(0, "7.5")
 
 tk.Label(aba_formato, text="Posição X:").grid(row=2, column=0, sticky="w")
 pos_x_entry = tk.Entry(aba_formato)
@@ -181,16 +179,6 @@ tk.Label(aba_formato, text="Posição Y:").grid(row=4, column=0, sticky="w")
 pos_y_entry = tk.Entry(aba_formato)
 pos_y_entry.grid(row=5, column=0, pady=2)
 pos_y_entry.insert(0, "2")
-
-# tk.Label(aba_formato, text="Largura da Caixa de Texto:").grid(row=6, column=0, sticky="w")
-# largura_textbox_entry = tk.Entry(aba_formato)
-# largura_textbox_entry.grid(row=7, column=0, pady=2)
-# largura_textbox_entry.insert(0, "8")
-
-# tk.Label(aba_formato, text="Altura da Caixa de Texto:").grid(row=8, column=0, sticky="w")
-# altura_textbox_entry = tk.Entry(aba_formato)
-# altura_textbox_entry.grid(row=9, column=0, pady=2)
-# altura_textbox_entry.insert(0, "2")
 
 tk.Label(aba_formato, text="Tamanho Máximo de Letras (nMaximo):").grid(row=10, column=0, sticky="w")
 n_maximo_entry = tk.Entry(aba_formato)
