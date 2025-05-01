@@ -69,8 +69,6 @@ def criar_apresentacao():
 
     # Coleta as configurações da interface
     altura_slide = float(7.5)  # Altura padrão
-    pos_x = float(pos_x_entry.get())
-    pos_y = float(pos_y_entry.get())
     # largura_textbox = float(largura_textbox_entry.get())
     # altura_textbox = float(altura_textbox_entry.get())
     font_size = int(font_size_entry.get())
@@ -96,6 +94,10 @@ def criar_apresentacao():
     prs.slide_width = Inches(largura_slide)
     prs.slide_height = Inches(altura_slide)
 
+    # Calcula a posição do textbox considerando a fração de 10
+    pos_x = prs.slide_width / 10 * int(pos_x_entry.get()) # Calcula a posição horizontal baseada na entrada do usuário
+    pos_y = prs.slide_height / 10 * int(pos_y_entry.get()) # Calcula a posição vertical baseada na entrada do usuário
+
     # Verifica linhas grandes
     linhas_grandes = [i + 1 for i, linha in enumerate(linhas) if len(linha) > n_maximo]
 
@@ -115,7 +117,7 @@ def criar_apresentacao():
 
         # Adiciona o textbox
         # textbox = slide.shapes.add_textbox(Inches(pos_x), Inches(pos_y), Inches(largura_textbox), Inches(altura_textbox))
-        textbox = slide.shapes.add_textbox(Inches(pos_x), Inches(pos_y), 8, 2)
+        textbox = slide.shapes.add_textbox(pos_x, pos_y, 8, 2)
         text_frame = textbox.text_frame
         text_frame.text = linha
         text_frame.auto_size = True
@@ -141,11 +143,12 @@ def criar_apresentacao():
     # Salva a apresentação
     prs.save(arquivo_ppt)
     messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
+            # ----- Fim da função criar_apresentacao -----
 
 # Configuração da janela principal
 janela = tk.Tk()
 janela.title("Gerador de Apresentações PPTX")
-janela.geometry("600x500")
+janela.geometry("620x500")
 
 # Frame para o campo de texto
 frame_texto = tk.Frame(janela)
@@ -169,16 +172,20 @@ notebook.add(aba_formato, text="Formato")
 
 # Controles de configuração na aba "Formato"
 
-tk.Label(aba_formato, text="Posição X:").grid(row=2, column=0, sticky="w")
+tk.Label(aba_formato,
+        #  text="Posicione o textbox usando valores de 0 a 10, \n representando frações de 10 da largura e altura do slide \n(ex: 40 = 4/10 da largura).").grid(row=0, column=0, pady=5, sticky="w") # Largura e altura do slide
+         text="Posicione o textbox usando valores de 0 a 10. \n Considere o centro da caixa de texto.").grid(row=0, column=0, pady=5, padx=5, sticky="w") # Largura e altura do slide
+
+tk.Label(aba_formato, text="Posição horizontal:").grid(row=2, column=0, sticky="w") # pos_x
 pos_x_entry = tk.Entry(aba_formato)
 pos_x_entry.grid(row=3, column=0, pady=2)
-# pos_x_entry.insert(0, "5")
-pos_x_entry.insert(0, "6.65")
+# pos_x_entry.insert(0, "6.65")
+pos_x_entry.insert(0, "5")  # Posição horizontal padrão
 
-tk.Label(aba_formato, text="Posição Y:").grid(row=4, column=0, sticky="w")
+tk.Label(aba_formato, text="Posição vertical:").grid(row=4, column=0, sticky="w") # pos_y
 pos_y_entry = tk.Entry(aba_formato)
 pos_y_entry.grid(row=5, column=0, pady=2)
-pos_y_entry.insert(0, "2")
+pos_y_entry.insert(0, "4")  # Posição vertical padrão
 
 tk.Label(aba_formato, text="Tamanho Máximo de Letras (nMaximo):").grid(row=10, column=0, sticky="w")
 n_maximo_entry = tk.Entry(aba_formato)
