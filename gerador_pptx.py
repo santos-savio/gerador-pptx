@@ -19,6 +19,57 @@ def colar_conteudo():
     except tk.TclError:
         messagebox.showerror("Erro", "Nada para colar!")
 
+def selecionar_txt_desativadoPraTeste():
+    global campo_texto
+    # Abre o seletor de arquivos para escolher um arquivo de texto
+    arquivos_txt = filedialog.askopenfilenames(
+        title="Selecionar Arquivos de Texto",
+        filetypes=(("Arquivos de Texto", "*.txt"), ("Todos os arquivos", "*.*")))
+    if arquivos_txt:
+        conteudo = ""
+        for arquivo in arquivos_txt:
+            with open(arquivo, 'r', encoding='utf-8') as file:
+                conteudo += file.read() + "\n"
+    
+    elif not arquivos_txt:
+        messagebox.showwarning("Aviso", "Nenhum arquivo selecionado")
+        return
+    
+    # if arquivo_txt:
+    #     with open(arquivo_txt, 'r', encoding='utf-8') as file:
+    #         conteudo = file.read()
+    #         campo_texto.delete(1.0, tk.END)  # Limpa o campo de texto
+    #         campo_texto.insert(tk.END, conteudo)  # Insere o conteúdo do arquivo
+    # else:
+    #     messagebox.showwarning("Aviso", "Nenhum arquivo selecionado")    
+
+def selecionar_txt():
+    # Abre o seletor de arquivos para escolher um arquivo de texto
+    arquivos_txt = filedialog.askopenfilename(
+        title="Selecionar Arquivo de Texto",
+        filetypes=(("Arquivos de Texto", "*.txt"), ("Todos os arquivos", "*.*")))
+    
+    texto = ""
+
+    if arquivos_txt:
+        # for arquivo in arquivos_txt:
+        with open(arquivos_txt, 'r', encoding='utf-8') as file:
+            texto += file.read() + "\n"
+
+            campo_texto.delete(1.0, tk.END)  # Limpa o campo de texto
+            campo_texto.insert(tk.END, texto)  # Insere o conteúdo colado        
+    else:
+        messagebox.showwarning("Aviso", "Nenhum arquivo selecionado")
+
+def executor(arquivos_txt):
+    # Se houver somente um arquivo, lê o conteúdo e insere no campo de texto
+    if len(arquivos_txt) == 1:
+        with open(arquivos_txt[0], 'r', encoding='utf-8') as file:
+            conteudo = file.read()
+            campo_texto.delete(1.0, tk.END)  # Limpa o campo de texto
+            campo_texto.insert(tk.END, conteudo)  # Insere o conteúdo do arquivo
+    # Se houver mais de um arquivo, tem que ver o que fazer :/
+
 def selecionar_imagem():
     # Abre o seletor de arquivos para escolher uma imagem
     global path_img
@@ -63,14 +114,21 @@ def hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
+
+# Seletor de cor
+def escolher_cor():
+    cor = colorchooser.askcolor()[1]  # Retorna o código hexadecimal da cor
+    if cor:
+        cor_selecionada.set(cor)  # Armazena a cor selecionada
+        frame_cor.config(bg=cor)  # Atualiza a cor do frame
+        # botao_cor.config(bg=cor)
+
 def criar_apresentacao():
     """Cria uma apresentação PowerPoint a partir do conteúdo do campo de texto."""
     global path_img
 
     # Coleta as configurações da interface
     altura_slide = float(7.5)  # Altura padrão
-    # largura_textbox = float(largura_textbox_entry.get())
-    # altura_textbox = float(altura_textbox_entry.get())
     font_size = int(font_size_entry.get())
     font_name = font_name_entry.get()
     n_maximo = int(n_maximo_entry.get())
@@ -116,8 +174,7 @@ def criar_apresentacao():
             pass  # Se não houver imagem, não faz nada
 
         # Adiciona o textbox
-        # textbox = slide.shapes.add_textbox(Inches(pos_x), Inches(pos_y), Inches(largura_textbox), Inches(altura_textbox))
-        textbox = slide.shapes.add_textbox(pos_x, pos_y, 8, 2)
+        textbox = slide.shapes.add_textbox(pos_x, pos_y, 8, 2) # Valores 8 e 2 não importam, pois o tamanho é ajustado automaticamente
         text_frame = textbox.text_frame
         text_frame.text = linha
         text_frame.auto_size = True
@@ -150,21 +207,29 @@ janela = tk.Tk()
 janela.title("Gerador de Apresentações PPTX")
 janela.geometry("620x500")
 
-# Frame para o campo de texto
+# --- Frame para o campo de texto ---
 frame_texto = tk.Frame(janela)
-frame_texto.grid(row=0, column=0, padx=10, pady=10)
+frame_texto.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
 
 # Botão "Colar" acima do campo de texto
 botao_colar = tk.Button(frame_texto, text="Colar", command=colar_conteudo)
-botao_colar.grid(row=0, column=0, pady=5)
+botao_colar.grid(row=0, column=5, pady=5)  # Alinha o botão à direita
+
+# Botão selecionar arquivos de texto
+botao_selecionar_txt = tk.Button(frame_texto, text="Selecionar txt", command=selecionar_txt)
+botao_selecionar_txt.grid(row=0, column=6, padx=5)
 
 # Campo de texto para o conteúdo dos slides
 campo_texto = tk.Text(frame_texto, width=40, height=20)
-campo_texto.grid(row=1, column=0, pady=5)
+campo_texto.grid(row=1, column=0, columnspan=10, pady=5)
+
+# --- Frame para as definições ---
+frame_definicoes = tk.Frame(janela)
+frame_definicoes.grid(row=0, column=2, padx=10, pady=10, sticky="n")
 
 # Notebook (TabControl) para organizar as configurações
-notebook = ttk.Notebook(janela)
-notebook.grid(row=0, column=1, padx=10, pady=10, sticky="n")
+notebook = ttk.Notebook(frame_definicoes)
+notebook.grid(row=0, column=0, padx=10, pady=10, sticky="n")
 
 # Aba "Formato"
 aba_formato = ttk.Frame(notebook)
@@ -172,25 +237,34 @@ notebook.add(aba_formato, text="Formato")
 
 # Controles de configuração na aba "Formato"
 
-tk.Label(aba_formato,
-        #  text="Posicione o textbox usando valores de 0 a 10, \n representando frações de 10 da largura e altura do slide \n(ex: 40 = 4/10 da largura).").grid(row=0, column=0, pady=5, sticky="w") # Largura e altura do slide
-         text="Posicione o textbox usando valores de 0 a 10. \n Considere o centro da caixa de texto.").grid(row=0, column=0, pady=5, padx=5, sticky="w") # Largura e altura do slide
+label_ajuda_formato = tk.Label(aba_formato,
+text="Posicione o textbox usando valores de 0 a 10. \n Considere o centro da caixa de texto.")
+label_ajuda_formato.grid(row=0, column=0, pady=5, padx=5, sticky="w") # Largura e altura do slide
 
+# Label para definir a posição horizontal do textbox
 tk.Label(aba_formato, text="Posição horizontal:").grid(row=2, column=0, sticky="w") # pos_x
+
+# Entry para definir a posição horizontal do textbox
 pos_x_entry = tk.Entry(aba_formato)
-pos_x_entry.grid(row=3, column=0, pady=2)
-# pos_x_entry.insert(0, "6.65")
+pos_x_entry.grid(row=3, column=0, pady=2, sticky="w")
 pos_x_entry.insert(0, "5")  # Posição horizontal padrão
+pos_x_entry.config(width=5)  # Define a largura do campo de entrada
 
+# Label para definir a posição vertical do textbox
 tk.Label(aba_formato, text="Posição vertical:").grid(row=4, column=0, sticky="w") # pos_y
-pos_y_entry = tk.Entry(aba_formato)
-pos_y_entry.grid(row=5, column=0, pady=2)
-pos_y_entry.insert(0, "4")  # Posição vertical padrão
 
+# Entry para definir a posição vertical do textbox
+pos_y_entry = tk.Entry(aba_formato)
+pos_y_entry.grid(row=5, column=0, pady=2, sticky="w")
+pos_y_entry.insert(0, "4")  # Posição vertical padrão
+pos_y_entry.config(width=5)  # Define a largura do campo de entrada
+
+# Labek para definir a quantidade de letras máxima antes de estourar o slide
 tk.Label(aba_formato, text="Tamanho Máximo de Letras (nMaximo):").grid(row=10, column=0, sticky="w")
 n_maximo_entry = tk.Entry(aba_formato)
-n_maximo_entry.grid(row=11, column=0, pady=2)
+n_maximo_entry.grid(row=11, column=0, pady=2, sticky="w")
 n_maximo_entry.insert(0, "40")
+n_maximo_entry.config(width=5)  # Define a largura do campo de entrada
 
 # Aba "Texto"
 aba_texto = ttk.Frame(notebook)
@@ -202,45 +276,45 @@ font_size_entry = tk.Entry(aba_texto)
 font_size_entry.grid(row=1, column=0, pady=2)
 font_size_entry.insert(0, "48")
 
+# Label para o nome da fonte
 tk.Label(aba_texto, text="Nome da Fonte:").grid(row=2, column=0, sticky="w")
 font_name_entry = tk.Entry(aba_texto)
 font_name_entry.grid(row=3, column=0, pady=2)
 font_name_entry.insert(0, "BANDEX")
 
-# Seletor de cor
-def escolher_cor():
-    cor = colorchooser.askcolor()[1]  # Retorna o código hexadecimal da cor
-    if cor:
-        cor_selecionada.set(cor)  # Armazena a cor selecionada
-        botao_cor.config(bg=cor)
-
-cor_selecionada = tk.StringVar(value="#FFFFFF")  # Cor padrão: branco
+# Botão para selecionar a cor do texto
 tk.Label(aba_texto, text="Cor do Texto:").grid(row=4, column=0, sticky="w")
 botao_cor = tk.Button(aba_texto, text="Escolher Cor", command=escolher_cor, bg="white")
 botao_cor.grid(row=5, column=0, pady=2)
 
+cor_selecionada = tk.StringVar(value="#FFFFFF")  # inicialização da variável de cor com branco
+
+# Cria um frame para exibir a cor selecionada
+frame_cor = tk.Frame(aba_texto, width=20, height=20, bg=cor_selecionada.get())
+frame_cor.grid(row=5, column=1, pady=2, sticky="w")
+
+# Botão "Gerar PPTX"
+botao_gerar = tk.Button(frame_definicoes, text="Gerar PPTX", width=20, height=3, command=criar_apresentacao)
+botao_gerar.grid(row=1, column=0, padx=5, pady=15, sticky="n")
+
+# Botão "Ajuda"
+botao_ajuda = tk.Button(frame_definicoes, text="Ajuda", command=exibir_ajuda)
+botao_ajuda.grid(row=2, column=0, padx=15, sticky="n")
+
 # Define a aba "Texto" como padrão
 notebook.select(aba_texto)
 
-# Frame para os botões
-frame_botoes = tk.Frame(janela)
-frame_botoes.grid(row=1, column=0, columnspan=2, pady=10)
+# --- Frame para os botões ---
+frame_selecao_imagem = tk.Frame(janela)
+frame_selecao_imagem.grid(row=2, column=0, columnspan=2, pady=10)
 
 # Botão "Selecionar Imagem"
-botao_imagem = tk.Button(frame_botoes, text="Selecionar Imagem", command=selecionar_imagem)
+botao_imagem = tk.Button(frame_selecao_imagem, text="Selecionar Imagem", command=selecionar_imagem)
 botao_imagem.grid(row=0, column=0, padx=5)
 
 # Rótulo para exibir o caminho da imagem
-label_caminho_imagem = tk.Label(frame_botoes, text="Nenhuma imagem selecionada", fg="gray", wraplength=300)  # Define a largura máxima em pixels para o texto
+label_caminho_imagem = tk.Label(frame_selecao_imagem, text="Nenhuma imagem selecionada", fg="gray", wraplength=300)  # Define a largura máxima em pixels para o texto
 label_caminho_imagem.grid(row=1, column=0, padx=5, pady=2)
-
-# Botão "Gerar PPTX"
-botao_gerar = tk.Button(frame_botoes, text="Gerar PPTX", command=criar_apresentacao)
-botao_gerar.grid(row=0, column=1, padx=5)
-
-# Botão "Ajuda"
-botao_ajuda = tk.Button(frame_botoes, text="Ajuda", command=exibir_ajuda)
-botao_ajuda.grid(row=0, column=2, padx=5)
 
 # Inicia a interface
 janela.mainloop()
