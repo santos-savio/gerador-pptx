@@ -1,3 +1,6 @@
+' Esta função vba para powerpoint, formata todas as caixas de texto em uma apresentação
+'para um formato padrão de fonte, cor e tamanho
+
 Sub formatTextboxes()
     Dim shape As shape
     Dim slideatual As slide
