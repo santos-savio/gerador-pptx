@@ -81,15 +81,27 @@ def selecionar_imagem():
     else:
         label_caminho_imagem.config(text="Nenhuma imagem selecionada")
 
+janela_ajuda_aberta = False
+
+def fechar_ajuda():
+    # Fecha a janela de ajuda se estiver aberta
+    global janela_ajuda_aberta, janela
+    if janela_ajuda_aberta:
+        janela_ajuda.destroy()
+        janela_ajuda_aberta = False
+
 def exibir_ajuda():
-    # Cria uma nova janela com instruções de uso
+    global janela_ajuda_aberta, janela_ajuda
+    # Verifica se a janela de ajuda já está aberta
+    if janela_ajuda_aberta:
+        return
+    
+    
+    # Definições da janela de ajuda
     janela_ajuda = tk.Toplevel(janela)
     janela_ajuda.title("Ajuda")
     janela_ajuda.geometry("400x300")
-
     texto_ajuda = """
-    
-
     Como usar o Gerador de Apresentações PPTX:
 
     1. Cole o conteúdo dos slides no campo de texto.
@@ -102,8 +114,19 @@ def exibir_ajuda():
     - Escolha uma cor para o texto usando o seletor de cores.
     - Insira o nome da fonte e o tamanho desejados.
     """
+    janela_ajuda.protocol("WM_DELETE_WINDOW", ao_fechar_ajuda)  # Fecha a janela de ajuda corretamente
+
+    # Cria uma nova janela com instruções de uso
     label_ajuda = tk.Label(janela_ajuda, text=texto_ajuda, justify=tk.LEFT)
     label_ajuda.pack(padx=10, pady=10)
+    janela_ajuda_aberta = True
+
+def ao_fechar_ajuda():
+    # Fecha a janela de ajuda e atualiza a variável de controle
+    global janela_ajuda_aberta, janela_ajuda
+    janela_ajuda_aberta = False
+    janela_ajuda.destroy()
+
 
 def calcular_largura(altura):
     """Calcula a largura com base na altura para manter a proporção 16:9."""
