@@ -1,3 +1,7 @@
+' Este código vba para Powerpoint formata todas as caixas de texto em uma apresentação
+' para um formato padrão de cor, fonte e tamanho
+' E configura todas as caixas de texto para a mesma posição e tamanho
+
 ' Função 1: Deletar Tí­tulos Vazios em Todos os Slides
 Sub function1()
 Dim slideAtual As slide
