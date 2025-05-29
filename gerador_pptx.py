@@ -9,6 +9,11 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 # Inicializa a variável path_img como None para evitar erros de referência antes da seleção
 path_img = None
 
+def limpar_campo_texto():
+    """Limpa o campo de texto."""
+    global campo_texto
+    campo_texto.delete(1.0, tk.END)  # Limpa todo o conteúdo do campo de texto
+
 # Funções para a interface
 def colar_conteudo():
     try:
@@ -236,11 +241,15 @@ frame_texto.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
 
 # Botão "Colar" acima do campo de texto
 botao_colar = tk.Button(frame_texto, text="Colar", command=colar_conteudo)
-botao_colar.grid(row=0, column=5, pady=5)  # Alinha o botão à direita
+botao_colar.grid(row=0, column=0,padx=5, pady=5, sticky="n")  # Alinha o botão à esquerda
 
 # Botão selecionar arquivos de texto
-botao_selecionar_txt = tk.Button(frame_texto, text="Selecionar txt", command=selecionar_txt)
-botao_selecionar_txt.grid(row=0, column=6, padx=5)
+botao_selecionar_txt = tk.Button(frame_texto, text="Selecionar txt", width=15, command=selecionar_txt)
+botao_selecionar_txt.grid(row=0, column=1, padx=5, pady=5, sticky="n")  # Alinha o botão à esquerda
+
+# Botão "Limpar" para limpar o campo de texto
+botao_limpar = tk.Button(frame_texto, text="Limpar", command=limpar_campo_texto)
+botao_limpar.grid(row=0, column=2, padx=10, pady=5, sticky="n")  # Alinha o botão à esquerda
 
 # Campo de texto para o conteúdo dos slides
 campo_texto = tk.Text(frame_texto, width=40, height=20)
