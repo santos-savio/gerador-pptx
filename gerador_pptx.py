@@ -24,30 +24,6 @@ def colar_conteudo():
     except tk.TclError:
         messagebox.showerror("Erro", "Nada para colar!")
 
-def selecionar_txt_desativadoPraTeste():
-    global campo_texto
-    # Abre o seletor de arquivos para escolher um arquivo de texto
-    arquivos_txt = filedialog.askopenfilenames(
-        title="Selecionar Arquivos de Texto",
-        filetypes=(("Arquivos de Texto", "*.txt"), ("Todos os arquivos", "*.*")))
-    if arquivos_txt:
-        conteudo = ""
-        for arquivo in arquivos_txt:
-            with open(arquivo, 'r', encoding='utf-8') as file:
-                conteudo += file.read() + "\n"
-    
-    elif not arquivos_txt:
-        messagebox.showwarning("Aviso", "Nenhum arquivo selecionado")
-        return
-    
-    # if arquivo_txt:
-    #     with open(arquivo_txt, 'r', encoding='utf-8') as file:
-    #         conteudo = file.read()
-    #         campo_texto.delete(1.0, tk.END)  # Limpa o campo de texto
-    #         campo_texto.insert(tk.END, conteudo)  # Insere o conteúdo do arquivo
-    # else:
-    #     messagebox.showwarning("Aviso", "Nenhum arquivo selecionado")    
-
 def selecionar_txt():
     # Abre o seletor de arquivos para escolher um arquivo de texto
     arquivos_txt = filedialog.askopenfilename(
@@ -66,14 +42,49 @@ def selecionar_txt():
     else:
         messagebox.showwarning("Aviso", "Nenhum arquivo selecionado")
 
-def executor(arquivos_txt):
-    # Se houver somente um arquivo, lê o conteúdo e insere no campo de texto
-    if len(arquivos_txt) == 1:
-        with open(arquivos_txt[0], 'r', encoding='utf-8') as file:
+def selecionar_arquivos():
+    global campo_texto, lista_arquivos
+
+    arquivos = filedialog.askopenfilenames(
+        title="Selecionar Arquivo(s) de Texto",
+        filetypes=(("Arquivos de Texto", "*.txt"), ("Todos os arquivos", "*.*"))
+    )
+
+    if not arquivos:
+        messagebox.showwarning("Aviso", "Nenhum arquivo selecionado")
+        return
+
+    # Se houver somente um arquivo, exibe o conteúdo no campo de texto
+    if len(arquivos) == 1:
+        # Se houver uma Listbox visível, destruir
+        if 'lista_arquivos' in globals() and lista_arquivos.winfo_exists():
+            lista_arquivos.destroy()
+
+        # Exibir o Text
+        campo_texto.grid(row=1, column=0, columnspan=10, pady=5)
+
+        with open(arquivos[0], 'r', encoding='utf-8') as file:
             conteudo = file.read()
-            campo_texto.delete(1.0, tk.END)  # Limpa o campo de texto
-            campo_texto.insert(tk.END, conteudo)  # Insere o conteúdo do arquivo
-    # Se houver mais de um arquivo, tem que ver o que fazer :/
+
+        campo_texto.delete(1.0, tk.END)
+        campo_texto.insert(tk.END, conteudo)
+
+    # Se houver mais de um arquivo, exibe os nomes na Listbox
+    else:
+        # Se houver o Textbox visível, destruir
+        if campo_texto.winfo_exists():
+            campo_texto.grid_forget()
+
+        # Se já existe Listbox, limpa. Senão, cria.
+        if 'lista_arquivos' in globals() and lista_arquivos.winfo_exists():
+            lista_arquivos.delete(0, tk.END)
+        else:
+            lista_arquivos = tk.Listbox(frame_texto, width=40, height=20)
+            lista_arquivos.grid(row=1, column=0, columnspan=10, pady=5)
+
+        # Insere os nomes dos arquivos na Lista
+        for arq in arquivos:
+            lista_arquivos.insert(tk.END, arq.split('/')[-1])
 
 def selecionar_imagem():
     # Abre o seletor de arquivos para escolher uma imagem
@@ -132,7 +143,6 @@ def ao_fechar_ajuda():
     janela_ajuda_aberta = False
     janela_ajuda.destroy()
 
-
 def calcular_largura(altura):
     """Calcula a largura com base na altura para manter a proporção 16:9."""
     return (16 / 9) * altura
@@ -142,7 +152,6 @@ def hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
-
 # Seletor de cor
 def escolher_cor():
     cor = colorchooser.askcolor()[1]  # Retorna o código hexadecimal da cor
@@ -151,7 +160,7 @@ def escolher_cor():
         frame_cor.config(bg=cor)  # Atualiza a cor do frame
         # botao_cor.config(bg=cor)
 
-def criar_apresentacao():
+def processar_arquivos():
     """Cria uma apresentação PowerPoint a partir do conteúdo do campo de texto."""
     global path_img
 
@@ -326,7 +335,7 @@ frame_cor = tk.Frame(aba_texto, width=20, height=20, bg=cor_selecionada.get())
 frame_cor.grid(row=5, column=1, pady=2, sticky="w")
 
 # Botão "Gerar PPTX"
-botao_gerar = tk.Button(frame_definicoes, text="Gerar PPTX", width=20, height=3, command=criar_apresentacao)
+botao_gerar = tk.Button(frame_definicoes, text="Gerar PPTX", width=20, height=3, command=processar_arquivos)
 botao_gerar.grid(row=1, column=0, padx=5, pady=15, sticky="n")
 
 # Botão "Ajuda"
@@ -343,6 +352,10 @@ frame_selecao_imagem.grid(row=2, column=0, columnspan=2, pady=10)
 # Botão "Selecionar Imagem"
 botao_imagem = tk.Button(frame_selecao_imagem, text="Selecionar Imagem", command=selecionar_imagem)
 botao_imagem.grid(row=0, column=0, padx=5)
+
+# Botão "Teste"
+botao_teste = tk.Button(frame_selecao_imagem, text="Teste", command=selecionar_arquivos)
+botao_teste.grid(row=0, column=1, padx=5)
 
 # Rótulo para exibir o caminho da imagem
 label_caminho_imagem = tk.Label(frame_selecao_imagem, text="Nenhuma imagem selecionada", fg="gray", wraplength=300)  # Define a largura máxima em pixels para o texto
