@@ -9,10 +9,13 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 # Inicializa a variável path_img como None para evitar erros de referência antes da seleção
 path_img = None
 
-def limpar_campo_texto():
+def limpar():
     """Limpa o campo de texto."""
-    global campo_texto
-    campo_texto.delete(1.0, tk.END)  # Limpa todo o conteúdo do campo de texto
+    global campo_texto, lista_arquivos
+    if 'lista_arquivos' in globals() and lista_arquivos.winfo_exists():
+        lista_arquivos.delete(0, tk.END)
+    if 'campo_texto' in globals() and campo_texto.winfo_exists():
+        campo_texto.delete(1.0, tk.END)  # Limpa todo o conteúdo do campo de texto
 
 # Funções para a interface
 def colar_conteudo():
@@ -43,7 +46,7 @@ def selecionar_txt():
         messagebox.showwarning("Aviso", "Nenhum arquivo selecionado")
 
 def selecionar_arquivos():
-    global campo_texto, lista_arquivos
+    global campo_texto, lista_arquivos, arquivos
 
     arquivos = filedialog.askopenfilenames(
         title="Selecionar Arquivo(s) de Texto",
@@ -160,9 +163,17 @@ def escolher_cor():
         frame_cor.config(bg=cor)  # Atualiza a cor do frame
         # botao_cor.config(bg=cor)
 
-def processar_arquivos():
+def processar_arquivo_unico():
     """Cria uma apresentação PowerPoint a partir do conteúdo do campo de texto."""
     global path_img
+    # Verifica se há imagem de fundo selecionada
+    if not path_img:
+        processar_sem_imagem = messagebox.askyesno("Aviso", "Nenhuma imagem de fundo selecionada. Deseja continuar sem imagem?")
+        if not processar_sem_imagem:
+            return
+
+    if 'lista_arquivos' in globals() and lista_arquivos.winfo_exists():
+        processar_arquivo_multiplo()
 
     # Coleta as configurações da interface
     altura_slide = float(7.5)  # Altura padrão
@@ -173,6 +184,8 @@ def processar_arquivos():
 
     # Coleta o conteúdo do campo de texto
     linhas = campo_texto.get(1.0, tk.END).splitlines()
+    if is_maiusculas.get():
+        linhas.upper()  # Converte todo o texto para maiúsculas
     if not linhas:
         messagebox.showwarning("Aviso", "O campo de texto está vazio!")
         return
@@ -232,12 +245,107 @@ def processar_arquivos():
             comentario = f"Linhas grandes (>{n_maximo} caracteres): {', '.join(map(str, linhas_grandes))}"
             slide.notes_slide.notes_text_frame.text = comentario
 
-    print(f"Largura do slide: {prs.slide_width / 914400}, Altura do slide: {prs.slide_height / 914400}")
-
     # Salva a apresentação
     prs.save(arquivo_ppt)
     messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
             # ----- Fim da função criar_apresentacao -----
+
+def processar_arquivo_multiplo():
+
+    global arquivos
+    """Cria uma apresentação PowerPoint para cada arquivo de texto."""
+    global path_img
+
+    try:
+        arquivos_selecionados = lista_arquivos.get(0, tk.END)
+    except AttributeError:
+        print("Nenhum arquivo selecionado na lista.")
+
+    if not arquivos_selecionados:
+        messagebox.showwarning("Aviso", "Nenhum arquivo selecionado!")
+        return
+    # Verifica se há imagem de fundo selecionada
+    if not path_img:
+        processar_sem_imagem = messagebox.askyesno("Aviso", "Nenhuma imagem de fundo selecionada. Deseja continuar sem imagem?")
+        if not processar_sem_imagem:
+            return
+        
+    # Coleta as configurações da interface
+    altura_slide = float(7.5)  # Altura padrão
+    font_size = int(font_size_entry.get())
+    font_name = font_name_entry.get()
+    n_maximo = int(n_maximo_entry.get())
+    r, g, b = hex_to_rgb(cor_selecionada.get())  # Converte a cor hexadecimal para RGB
+
+    for index, nome_arquivo in enumerate(arquivos_selecionados):
+
+        # Coleta o conteúdo do arquivo
+        with open(arquivos[index], 'r', encoding='utf-8') as file:
+            linhas = file.readlines()
+        
+        if is_maiusculas.get():
+            linhas.upper()  # Converte todo o texto para maiúsculas
+
+        # Define o nome do arquivo
+        nome_arquivo = nome_arquivo.split('/')[-1].replace('.txt', '') + ".pptx"
+        arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+        if not arquivo_ppt:
+            return  # Usuário cancelou a operação
+
+        # Cria a apresentação
+        prs = Presentation()
+        largura_slide = calcular_largura(altura_slide)
+        prs.slide_width = Inches(largura_slide)
+        prs.slide_height = Inches(altura_slide)
+
+        # Calcula a posição do textbox considerando a fração de 10
+        pos_x = prs.slide_width / 10 * int(pos_x_entry.get())  # Calcula a posição horizontal baseada na entrada do usuário
+        pos_y = prs.slide_height / 10 * int(pos_y_entry.get())  # Calcula a posição vertical baseada na entrada do usuário
+
+        # Verifica linhas grandes
+        linhas_grandes = [i + 1 for i, linha in enumerate(linhas) if len(linha) > n_maximo]
+
+        titulo = True
+
+        for indice, linha in enumerate(linhas):
+            linha = linha.rstrip()  # Remove espaços adicionais
+            # if not linha:
+            #     continue  # Ignora linhas vazias
+            slide = prs.slides.add_slide(prs.slide_layouts[5])  # Cria um slide branco e sem título
+
+            # Adiciona a imagem de fundo, se selecionada
+            if path_img:
+                slide.shapes.add_picture(path_img, 0, 0, prs.slide_width, prs.slide_height)
+            else:
+                pass  # Se não houver imagem, não faz nada
+
+            # Adiciona o textbox
+            textbox = slide.shapes.add_textbox(pos_x, pos_y, 8, 2)  # Valores 8 e 2 não importam, pois o tamanho é ajustado automaticamente
+            textbox = slide.shapes.add_textbox(pos_x, pos_y, 8, 2) # Valores 8 e 2 não importam, pois o tamanho é ajustado automaticamente
+            text_frame = textbox.text_frame
+            text_frame.text = linha
+            text_frame.auto_size = True
+            text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+            p = text_frame.paragraphs[0]
+            p.font.size = Pt(font_size)
+            p.font.name = font_name
+            p.font.color.rgb = RGBColor(r, g, b)
+            p.alignment = PP_ALIGN.CENTER
+
+            if titulo:
+                p.font.size = Pt(font_size * 1.6)  # Aumenta o tamanho da fonte do título
+                titulo = False
+
+            # Adiciona um comentário no primeiro slide com as linhas grandes
+            if indice == 0 and linhas_grandes:
+                comentario = f"Linhas grandes (>{n_maximo} caracteres): {', '.join(map(str, linhas_grandes))}"
+                slide.notes_slide.notes_text_frame.text = comentario
+
+        # Salva a apresentação
+        prs.save(arquivo_ppt)
+        messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
+
 
 # Configuração da janela principal
 janela = tk.Tk()
@@ -253,11 +361,11 @@ botao_colar = tk.Button(frame_texto, text="Colar", command=colar_conteudo)
 botao_colar.grid(row=0, column=0,padx=5, pady=5, sticky="n")  # Alinha o botão à esquerda
 
 # Botão selecionar arquivos de texto
-botao_selecionar_txt = tk.Button(frame_texto, text="Selecionar txt", width=15, command=selecionar_txt)
+botao_selecionar_txt = tk.Button(frame_texto, text="Selecionar txt", width=15, command=selecionar_arquivos)
 botao_selecionar_txt.grid(row=0, column=1, padx=5, pady=5, sticky="n")  # Alinha o botão à esquerda
 
 # Botão "Limpar" para limpar o campo de texto
-botao_limpar = tk.Button(frame_texto, text="Limpar", command=limpar_campo_texto)
+botao_limpar = tk.Button(frame_texto, text="Limpar", command=limpar)
 botao_limpar.grid(row=0, column=2, padx=10, pady=5, sticky="n")  # Alinha o botão à esquerda
 
 # Campo de texto para o conteúdo dos slides
@@ -302,10 +410,14 @@ pos_y_entry.config(width=5)  # Define a largura do campo de entrada
 
 # Labek para definir a quantidade de letras máxima antes de estourar o slide
 tk.Label(aba_formato, text="Tamanho Máximo de Letras (nMaximo):").grid(row=10, column=0, sticky="w")
-n_maximo_entry = tk.Entry(aba_formato)
+n_maximo_entry = tk.Entry(aba_formato, width=5)
 n_maximo_entry.grid(row=11, column=0, pady=2, sticky="w")
 n_maximo_entry.insert(0, "40")
-n_maximo_entry.config(width=5)  # Define a largura do campo de entrada
+
+is_maiusculas = tk.BooleanVar(value=True)  # Variável para controlar se o texto deve ser convertido para maiúsculas
+# Checkbutton para converter texto para maiúsculas
+check_maiusculas = tk.Checkbutton(aba_formato, text="Converter texto para MAIÚSCULAS", variable=is_maiusculas)
+check_maiusculas.grid(row=12, column=0, pady=2, sticky="w")
 
 # Aba "Texto"
 aba_texto = ttk.Frame(notebook)
@@ -315,7 +427,7 @@ notebook.add(aba_texto, text="Texto")
 tk.Label(aba_texto, text="Tamanho da Fonte:").grid(row=0, column=0, sticky="w")
 font_size_entry = tk.Entry(aba_texto)
 font_size_entry.grid(row=1, column=0, pady=2)
-font_size_entry.insert(0, "48")
+font_size_entry.insert(0, "46")
 
 # Label para o nome da fonte
 tk.Label(aba_texto, text="Nome da Fonte:").grid(row=2, column=0, sticky="w")
@@ -335,7 +447,7 @@ frame_cor = tk.Frame(aba_texto, width=20, height=20, bg=cor_selecionada.get())
 frame_cor.grid(row=5, column=1, pady=2, sticky="w")
 
 # Botão "Gerar PPTX"
-botao_gerar = tk.Button(frame_definicoes, text="Gerar PPTX", width=20, height=3, command=processar_arquivos)
+botao_gerar = tk.Button(frame_definicoes, text="Gerar PPTX", width=20, height=3, command=processar_arquivo_unico)
 botao_gerar.grid(row=1, column=0, padx=5, pady=15, sticky="n")
 
 # Botão "Ajuda"
@@ -354,8 +466,8 @@ botao_imagem = tk.Button(frame_selecao_imagem, text="Selecionar Imagem", command
 botao_imagem.grid(row=0, column=0, padx=5)
 
 # Botão "Teste"
-botao_teste = tk.Button(frame_selecao_imagem, text="Teste", command=selecionar_arquivos)
-botao_teste.grid(row=0, column=1, padx=5)
+# botao_teste = tk.Button(frame_selecao_imagem, text="Teste", command=selecionar_arquivos)
+# botao_teste.grid(row=0, column=1, padx=5)
 
 # Rótulo para exibir o caminho da imagem
 label_caminho_imagem = tk.Label(frame_selecao_imagem, text="Nenhuma imagem selecionada", fg="gray", wraplength=300)  # Define a largura máxima em pixels para o texto
