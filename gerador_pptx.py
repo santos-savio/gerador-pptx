@@ -5,6 +5,7 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+import os
 
 # Inicializa a variável path_img como None para evitar erros de referência antes da seleção
 path_img = None
@@ -13,7 +14,9 @@ def limpar():
     """Limpa o campo de texto."""
     global campo_texto, lista_arquivos
     if 'lista_arquivos' in globals() and lista_arquivos.winfo_exists():
-        lista_arquivos.delete(0, tk.END)
+        # lista_arquivos.delete(0, tk.END)
+        lista_arquivos.destroy()  # Destroi a Listbox se existir
+        campo_texto.grid(row=1, column=0, columnspan=10, pady=5)  # Exibe o campo de texto novamente
     if 'campo_texto' in globals() and campo_texto.winfo_exists():
         campo_texto.delete(1.0, tk.END)  # Limpa todo o conteúdo do campo de texto
 
@@ -174,25 +177,27 @@ def processar_arquivo_unico():
 
     if 'lista_arquivos' in globals() and lista_arquivos.winfo_exists():
         processar_arquivo_multiplo()
+        return
 
     # Coleta as configurações da interface
     altura_slide = float(7.5)  # Altura padrão
     font_size = int(font_size_entry.get())
     font_name = font_name_entry.get()
     n_maximo = int(n_maximo_entry.get())
-    r, g, b = hex_to_rgb(cor_selecionada.get())  # Converte a cor hexadecimal para RGB
+    r, g, b = hex_to_rgb(cor_selecionada.get())
 
     # Coleta o conteúdo do campo de texto
     linhas = campo_texto.get(1.0, tk.END).splitlines()
     if is_maiusculas.get():
-        linhas.upper()  # Converte todo o texto para maiúsculas
+        linhas = [linha.upper() for linha in linhas]
     if not linhas:
         messagebox.showwarning("Aviso", "O campo de texto está vazio!")
         return
 
     # Define o nome do arquivo com base na primeira linha do texto
     nome_arquivo = linhas[0].strip() + ".pptx"
-    arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+    # arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+    arquivo_ppt = os.path.join(os.getcwd(), nome_arquivo)  # Salva na pasta atual
     if not arquivo_ppt:
         return  # Usuário cancelou a operação
 
@@ -245,8 +250,10 @@ def processar_arquivo_unico():
             comentario = f"Linhas grandes (>{n_maximo} caracteres): {', '.join(map(str, linhas_grandes))}"
             slide.notes_slide.notes_text_frame.text = comentario
 
-    # Salva a apresentação
+    # Salva a apresentação (sobrescreve se já existir)
     prs.save(arquivo_ppt)
+    # arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+
     messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
             # ----- Fim da função criar_apresentacao -----
 
@@ -277,21 +284,26 @@ def processar_arquivo_multiplo():
     n_maximo = int(n_maximo_entry.get())
     r, g, b = hex_to_rgb(cor_selecionada.get())  # Converte a cor hexadecimal para RGB
 
+    print(f"Arquivos selecionados: {arquivos_selecionados}")
     for index, nome_arquivo in enumerate(arquivos_selecionados):
+
+        print(f"Processando arquivo: {nome_arquivo}")
 
         # Coleta o conteúdo do arquivo
         with open(arquivos[index], 'r', encoding='utf-8') as file:
             linhas = file.readlines()
+            if is_maiusculas.get():
+                linhas = [linha.upper() for linha in linhas]
         
-        if is_maiusculas.get():
-            linhas.upper()  # Converte todo o texto para maiúsculas
 
         # Define o nome do arquivo
         nome_arquivo = nome_arquivo.split('/')[-1].replace('.txt', '') + ".pptx"
-        arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+        # arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+        arquivo_ppt = os.path.join(os.getcwd(), nome_arquivo)  # Salva na pasta atual
         if not arquivo_ppt:
             return  # Usuário cancelou a operação
 
+        print(f"Criando apresentação para: {nome_arquivo}")
         # Cria a apresentação
         prs = Presentation()
         largura_slide = calcular_largura(altura_slide)
@@ -309,8 +321,6 @@ def processar_arquivo_multiplo():
 
         for indice, linha in enumerate(linhas):
             linha = linha.rstrip()  # Remove espaços adicionais
-            # if not linha:
-            #     continue  # Ignora linhas vazias
             slide = prs.slides.add_slide(prs.slide_layouts[5])  # Cria um slide branco e sem título
 
             # Adiciona a imagem de fundo, se selecionada
@@ -343,7 +353,9 @@ def processar_arquivo_multiplo():
                 slide.notes_slide.notes_text_frame.text = comentario
 
         # Salva a apresentação
-        prs.save(arquivo_ppt)
+        print(f"Salvando apresentação: {arquivo_ppt}")
+        arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+        # prs.save(arquivo_ppt)  # Sobrescreve se já existir
         messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
 
 
@@ -381,42 +393,42 @@ notebook = ttk.Notebook(frame_definicoes)
 notebook.grid(row=0, column=0, padx=10, pady=10, sticky="n")
 
 # Aba "Formato"
-aba_formato = ttk.Frame(notebook)
-notebook.add(aba_formato, text="Formato")
+aba_definicoes = ttk.Frame(notebook)
+notebook.add(aba_definicoes, text="Definições")
 
-# Controles de configuração na aba "Formato"
+# Controles de configuração na aba "Definições"
 
-label_ajuda_formato = tk.Label(aba_formato,
+label_ajuda_formato = tk.Label(aba_definicoes,
 text="Posicione o textbox usando valores de 0 a 10. \n Considere o centro da caixa de texto.")
 label_ajuda_formato.grid(row=0, column=0, pady=5, padx=5, sticky="w") # Largura e altura do slide
 
 # Label para definir a posição horizontal do textbox
-tk.Label(aba_formato, text="Posição horizontal:").grid(row=2, column=0, sticky="w") # pos_x
+tk.Label(aba_definicoes, text="Posição horizontal:").grid(row=2, column=0, sticky="w") # pos_x
 
 # Entry para definir a posição horizontal do textbox
-pos_x_entry = tk.Entry(aba_formato)
+pos_x_entry = tk.Entry(aba_definicoes)
 pos_x_entry.grid(row=3, column=0, pady=2, sticky="w")
 pos_x_entry.insert(0, "5")  # Posição horizontal padrão
 pos_x_entry.config(width=5)  # Define a largura do campo de entrada
 
 # Label para definir a posição vertical do textbox
-tk.Label(aba_formato, text="Posição vertical:").grid(row=4, column=0, sticky="w") # pos_y
+tk.Label(aba_definicoes, text="Posição vertical:").grid(row=4, column=0, sticky="w") # pos_y
 
 # Entry para definir a posição vertical do textbox
-pos_y_entry = tk.Entry(aba_formato)
+pos_y_entry = tk.Entry(aba_definicoes)
 pos_y_entry.grid(row=5, column=0, pady=2, sticky="w")
 pos_y_entry.insert(0, "4")  # Posição vertical padrão
 pos_y_entry.config(width=5)  # Define a largura do campo de entrada
 
 # Labek para definir a quantidade de letras máxima antes de estourar o slide
-tk.Label(aba_formato, text="Tamanho Máximo de Letras (nMaximo):").grid(row=10, column=0, sticky="w")
-n_maximo_entry = tk.Entry(aba_formato, width=5)
+tk.Label(aba_definicoes, text="Tamanho Máximo de Letras (nMaximo):").grid(row=10, column=0, sticky="w")
+n_maximo_entry = tk.Entry(aba_definicoes, width=5)
 n_maximo_entry.grid(row=11, column=0, pady=2, sticky="w")
 n_maximo_entry.insert(0, "40")
 
 is_maiusculas = tk.BooleanVar(value=True)  # Variável para controlar se o texto deve ser convertido para maiúsculas
 # Checkbutton para converter texto para maiúsculas
-check_maiusculas = tk.Checkbutton(aba_formato, text="Converter texto para MAIÚSCULAS", variable=is_maiusculas)
+check_maiusculas = tk.Checkbutton(aba_definicoes, text="Converter texto para MAIÚSCULAS", variable=is_maiusculas)
 check_maiusculas.grid(row=12, column=0, pady=2, sticky="w")
 
 # Aba "Texto"
