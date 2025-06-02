@@ -121,8 +121,10 @@ def exibir_ajuda():
     
     # Definições da janela de ajuda
     janela_ajuda = tk.Toplevel(janela)
+    # janela_ajuda
     janela_ajuda.title("Ajuda")
-    janela_ajuda.geometry("400x300")
+    janela_ajuda.geometry("400x250")
+    janela_ajuda.resizable(False, False)  # Impede redimensionamento da janela de ajuda
     texto_ajuda = """
     Como usar o Gerador de Apresentações PPTX:
 
@@ -140,7 +142,7 @@ def exibir_ajuda():
 
     # Cria uma nova janela com instruções de uso
     label_ajuda = tk.Label(janela_ajuda, text=texto_ajuda, justify=tk.LEFT)
-    label_ajuda.pack(padx=10, pady=10)
+    label_ajuda.pack(padx=10, pady=10, anchor="center")  # Centraliza o texto
     janela_ajuda_aberta = True
 
 def ao_fechar_ajuda():
@@ -403,9 +405,9 @@ janela = tk.Tk()
 janela.title("Gerador de Apresentações PPTX")
 janela.geometry("620x500")
 
-# --- Frame para o campo de texto ---
-frame_texto = tk.Frame(janela)
-frame_texto.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
+# -------------- Frame para o campo de texto --------------
+frame_texto = tk.Frame(janela, bg="lightblue")
+frame_texto.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="n")
 
 # Botão "Colar" acima do campo de texto
 botao_colar = tk.Button(frame_texto, text="Colar", command=colar_conteudo)
@@ -421,11 +423,11 @@ botao_limpar.grid(row=0, column=2, padx=10, pady=5, sticky="n")  # Alinha o bot�
 
 # Campo de texto para o conteúdo dos slides
 campo_texto = tk.Text(frame_texto, width=40, height=20)
-campo_texto.grid(row=1, column=0, columnspan=10, pady=5)
+campo_texto.grid(row=1, column=0, columnspan=10, pady=5)  # Exibe o campo de texto
 
-# --- Frame para as definições ---
+# -------------- Frame para as definições --------------
 frame_definicoes = tk.Frame(janela)
-frame_definicoes.grid(row=0, column=2, padx=10, pady=10, sticky="n")
+frame_definicoes.grid(row=0, column=2, rowspan=2, padx=10, pady=10, sticky="n")
 
 # Notebook (TabControl) para organizar as configurações
 notebook = ttk.Notebook(frame_definicoes)
@@ -523,21 +525,21 @@ botao_ajuda.grid(row=2, column=0, padx=15, sticky="n")
 # Define a aba "Texto" como padrão
 notebook.select(aba_texto)
 
-# --- Frame para os botões ---
+# -------------- Frame para os botões --------------
 frame_selecao_imagem = tk.Frame(janela)
-frame_selecao_imagem.grid(row=2, column=0, columnspan=2, pady=10)
+frame_selecao_imagem.grid(row=1, column=0, columnspan=2, pady=10, sticky="n")
 
 # Botão "Selecionar Imagem"
 botao_imagem = tk.Button(frame_selecao_imagem, text="Selecionar Imagem", command=selecionar_imagem)
-botao_imagem.grid(row=0, column=0, padx=5)
+botao_imagem.grid(row=0, column=0, padx=5, sticky="n")
+
+# Rótulo para exibir o caminho da imagem
+label_caminho_imagem = tk.Label(frame_selecao_imagem, text="Nenhuma imagem selecionada", fg="gray", wraplength=300)  # Define a largura máxima em pixels para o texto
+label_caminho_imagem.grid(row=1, column=0, padx=5, sticky="n")
 
 # Botão "Teste"
 # botao_teste = tk.Button(frame_selecao_imagem, text="Teste", command=selecionar_arquivos)
 # botao_teste.grid(row=0, column=1, padx=5)
-
-# Rótulo para exibir o caminho da imagem
-label_caminho_imagem = tk.Label(frame_selecao_imagem, text="Nenhuma imagem selecionada", fg="gray", wraplength=300)  # Define a largura máxima em pixels para o texto
-label_caminho_imagem.grid(row=1, column=0, padx=5, pady=2)
 
 # Inicia a interface
 janela.mainloop()
