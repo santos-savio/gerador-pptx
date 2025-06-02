@@ -196,6 +196,10 @@ def processar_arquivo_unico():
 
     # Define o nome do arquivo com base na primeira linha do texto
     nome_arquivo = linhas[0].strip() + ".pptx"
+
+    # Remove caracteres inválidos do nome do arquivo
+    nome_arquivo = "".join(c for c in nome_arquivo if c.isalnum() or c in (' ', '.', '_', '-')).rstrip()
+
     # arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
     arquivo_ppt = os.path.join(os.getcwd(), nome_arquivo)  # Salva na pasta atual
     if not arquivo_ppt:
@@ -250,11 +254,29 @@ def processar_arquivo_unico():
             comentario = f"Linhas grandes (>{n_maximo} caracteres): {', '.join(map(str, linhas_grandes))}"
             slide.notes_slide.notes_text_frame.text = comentario
 
-    # Salva a apresentação (sobrescreve se já existir)
-    prs.save(arquivo_ppt)
-    # arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+    # Verifica se o usuário deseja salvar automaticamente
+    if save_auto_one_file.get():
+        # Salva a apresentação (sobrescreve se já existir)
+        try:
+            prs.save(arquivo_ppt)
+            if not omitir_confirmacao.get():
+                messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível salvar a apresentação: {e}")
+            return
+    else:
+        # Abre o diálogo para salvar o arquivo
+        try:
+            arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+            if arquivo_ppt:
+                prs.save(arquivo_ppt)
+                if not omitir_confirmacao.get():
+                    messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
+            else:
+                messagebox.showwarning("Aviso", "Operação cancelada pelo usuário.")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível salvar a apresentação: {e}")
 
-    messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
             # ----- Fim da função criar_apresentacao -----
 
 def processar_arquivo_multiplo():
@@ -298,6 +320,9 @@ def processar_arquivo_multiplo():
 
         # Define o nome do arquivo
         nome_arquivo = nome_arquivo.split('/')[-1].replace('.txt', '') + ".pptx"
+        # Remove caracteres inválidos do nome do arquivo
+        nome_arquivo = "".join(c for c in nome_arquivo if c.isalnum() or c in (' ', '.', '_', '-')).rstrip()
+
         # arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
         arquivo_ppt = os.path.join(os.getcwd(), nome_arquivo)  # Salva na pasta atual
         if not arquivo_ppt:
@@ -354,9 +379,23 @@ def processar_arquivo_multiplo():
 
         # Salva a apresentação
         print(f"Salvando apresentação: {arquivo_ppt}")
-        arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
-        # prs.save(arquivo_ppt)  # Sobrescreve se já existir
-        messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
+
+        if save_auto_multiple_files.get():
+            try:
+                prs.save(arquivo_ppt)
+                if not omitir_confirmacao.get():
+                    messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
+            except Exception as e:
+                messagebox.showerror("Erro", f"Não foi possível salvar a apresentação: {e}")
+                return
+        else:
+            try:
+                arquivo_ppt = filedialog.asksaveasfilename(defaultextension=".pptx", filetypes=[("Arquivos PowerPoint", "*.pptx")], initialfile=nome_arquivo)
+                if not omitir_confirmacao.get():
+                    messagebox.showinfo("Sucesso", f"Apresentação salva como {arquivo_ppt}")
+            except Exception as e:
+                messagebox.showerror("Erro", f"Não foi possível salvar a apresentação: {e}")
+                return
 
 
 # Configuração da janela principal
@@ -430,6 +469,21 @@ is_maiusculas = tk.BooleanVar(value=True)  # Variável para controlar se o texto
 # Checkbutton para converter texto para maiúsculas
 check_maiusculas = tk.Checkbutton(aba_definicoes, text="Converter texto para MAIÚSCULAS", variable=is_maiusculas)
 check_maiusculas.grid(row=12, column=0, pady=2, sticky="w")
+
+save_auto_one_file = tk.BooleanVar(value=True)  # Variável para controlar se o arquivo deve ser salvo automaticamente
+# Checkbutton para salvar automaticamente
+check_save_auto = tk.Checkbutton(aba_definicoes, text="Salvar arquivo único automaticamente", variable=save_auto_one_file)
+check_save_auto.grid(row=13, column=0, pady=2, sticky="w")
+
+save_auto_multiple_files = tk.BooleanVar(value=True)  # Variável para controlar se os arquivos múltiplos devem ser salvos automaticamente
+# Checkbutton para salvar automaticamente múltiplos arquivos
+check_save_auto_multiple = tk.Checkbutton(aba_definicoes, text="Salvar automaticamente múltiplos arquivos", variable=save_auto_multiple_files)
+check_save_auto_multiple.grid(row=14, column=0, pady=2, sticky="w")
+
+omitir_confirmacao = tk.BooleanVar(value=False)  # Variável para controlar se a confirmação deve ser omitida
+# Checkbutton para omitir confirmação
+check_omitir_confirmacao = tk.Checkbutton(aba_definicoes, text="Omitir confirmação de salvamento", variable=omitir_confirmacao)
+check_omitir_confirmacao.grid(row=15, column=0, pady=2, sticky="w")
 
 # Aba "Texto"
 aba_texto = ttk.Frame(notebook)
