@@ -85,7 +85,7 @@ def selecionar_arquivos():
         if 'lista_arquivos' in globals() and lista_arquivos.winfo_exists():
             lista_arquivos.delete(0, tk.END)
         else:
-            lista_arquivos = tk.Listbox(frame_texto, width=40, height=20)
+            lista_arquivos = tk.Listbox(frame_texto, width=53, height=20)
             lista_arquivos.grid(row=1, column=0, columnspan=10, pady=5)
 
         # Insere os nomes dos arquivos na Lista
@@ -406,7 +406,7 @@ janela.title("Gerador de Apresentações PPTX")
 janela.geometry("620x500")
 
 # -------------- Frame para o campo de texto --------------
-frame_texto = tk.Frame(janela, bg="lightblue")
+frame_texto = tk.Frame(janela)
 frame_texto.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="n")
 
 # Botão "Colar" acima do campo de texto
