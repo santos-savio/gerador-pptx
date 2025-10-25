@@ -6,6 +6,8 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 
+version = "2.27"
+
 # Inicializa a variável path_img como None para evitar erros de referência antes da seleção
 path_img = None
 
@@ -349,7 +351,7 @@ def processar_arquivo_multiplo():
 
 # Configuração da janela principal
 janela = tk.Tk()
-janela.title("Gerador de Apresentações PPTX")
+janela.title("Gerador de Apresentações PPTX - " + version)
 janela.geometry("620x500")
 
 # --- Frame para o campo de texto ---
